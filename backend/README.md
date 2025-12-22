@@ -11,6 +11,8 @@
    ```
 5. Create `.env` file (optional) with `OPENWEATHER_API_KEY=your_key` if you want real weather data.
 
+> **Note**: The repository does not include the large `mandi_data.csv` historical dataset. The system is designed to use **Smart Fallback (Mock Data)** if real data is missing, so it will work immediately out of the box for demonstration purposes. To get real predictions, you would need to populate `mandi_data.csv` using the included `data_fetcher.py` script or import your own Agmarknet data.
+
 ## Running
 
 Start the server:
