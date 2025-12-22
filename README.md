@@ -6,7 +6,7 @@ By combining historical data analysis with machine learning, MandiPredict helps 
 
 ## ✨ Key Features
 
-*   **📈 Price Prediction**: Uses Machine Learning (Random Forest/Gradient Boosting) to forecast crop prices for the next 7 days based on historical trends and weather patterns.
+*   **📈 Price Prediction**: Powered by a robust **Random Forest Regression model**, this feature forecasts crop prices for the next 7 days by analyzing historical price trends, potential yield, and seasonality.
 *   **🤖 AI Kisan Sahayak**: A built-in chatbot powered by **Google Gemini AI** that answers farmers' questions about crop diseases, fertilizers, and techniques in **Hindi, Telugu, and English**.
 *   **📍 Mandi Optimization**: unique logic that calculates the "Best Mandi to Sell" by analyzing current prices, transport costs, and storage costs to recommend the most profitable option.
 *   **🌦️ Weather Integration**: Real-time 10-day weather forecasts to help plan harvesting and storage.
@@ -25,46 +25,6 @@ This project is built using a robust modern tech stack:
 
 ### **Backend & AI**
 *   **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (Python) - High-performance backend.
-*   **Machine Learning**: `scikit-learn`, `pandas`, `numpy`, `joblib`.
+*   **Machine Learning**: **Random Forest Regression** (`scikit-learn`) for high-accuracy price forecasting.
 *   **GenAI**: **Google Gemini 1.5 Flash** for the conversational assistant.
 *   **Data Source**: Scraping capabilities for **Agmarknet** (Government of India) data.
-
-## 🚀 Getting Started
-
-### Prerequisites
-*   Flutter SDK installed.
-*   Python 3.9+ installed.
-
-### 1. Backend Setup
-The backend powers the predictions and AI features.
-
-```bash
-cd backend
-# Create virtual environment
-python -m venv venv
-# Activate it (Windows)
-.\venv\Scripts\activate
-# Install dependencies
-pip install -r requirements.txt
-# Run the server
-uvicorn main:app --reload --host 0.0.0.0
-```
-
-> **Note**: The repository includes a "Smart Fallback" mode. If real historical data is missing (due to GitHub file size limits), the app generates realistic mock data so you can test the UI and flow immediately.
-
-### 2. Mobile App Setup
-```bash
-# Get dependencies
-flutter pub get
-# Run the app
-flutter run
-```
-
-## 📸 Screenshots
-*(Add screenshots of your app Dashboard, Prediction Screen, and Chatbot here)*
-
-## 🤝 Contribution
-Contributions are welcome! Feel free to open an issue or submit a pull request.
-
-## 📄 License
-This project is open-source and available under the MIT License.
