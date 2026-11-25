@@ -14,7 +14,7 @@ class AuthWrapper extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: FarmerLoadingWidget(message: "Starting Mandi Predict..."),
+            body: FarmerLoadingWidget(message: "Starting FarmCare..."),
           );
         }
         if (snapshot.hasData && snapshot.data != null) {

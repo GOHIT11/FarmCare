@@ -6,16 +6,22 @@ import 'package:http/http.dart' as http;
 import '../models/prediction_response.dart';
 
 class MandiApiService {
-  // Use 10.0.2.2 for Android Emulator to access host localhost
-  // Use 10.0.2.2 for Android Emulator, OR your PC's IP for real device
-  // Use 10.0.2.2 for Android Emulator to access host localhost
-  // Use 10.188.160.2 for Real Mobile Device (Wi-Fi LAN)
   // static const String baseUrl = 'http://10.0.2.2:8000';
-  static const String baseUrl = 'http://10.213.34.2:8000'; // Real Wi-Fi IP
+  // static const String baseUrl = 'http://10.213.34.2:8000'; // Real Wi-Fi IP
+
+  static String get baseUrl {
+    if (kIsWeb) return 'http://127.0.0.1:8000';
+    // accessing localhost from Android emulator
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:8000';
+    }
+    return 'http://127.0.0.1:8000';
+  }
 
   // ... (previous methods fetchOptions, fetchPrediction, optimizeProfile)
 
-  Future<String> sendChat(String message, String? imagePath) async {
+  Future<String> sendChat(String message, String? imagePath,
+      {String? audioPath}) async {
     final url = Uri.parse('$baseUrl/chat');
     try {
       final request = http.MultipartRequest('POST', url);
@@ -27,6 +33,16 @@ class MandiApiService {
             'image',
             imagePath,
             contentType: MediaType('image', 'jpeg'), // Assuming jpeg/png
+          ),
+        );
+      }
+
+      if (audioPath != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'audio',
+            audioPath,
+            contentType: MediaType('audio', 'm4a'),
           ),
         );
       }
@@ -61,6 +77,22 @@ class MandiApiService {
       }
     } catch (e) {
       debugPrint('Error fetching options: $e');
+      throw Exception('Connection error: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchDistricts() async {
+    final url = Uri.parse('$baseUrl/districts');
+    debugPrint('Fetching districts from: $url');
+    try {
+      final response = await http.get(url).timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Failed to load districts: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error fetching districts: $e');
       throw Exception('Connection error: $e');
     }
   }

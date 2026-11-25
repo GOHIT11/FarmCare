@@ -75,3 +75,9 @@ venv.bak/
 /backend/farmers_data.csv
 /backend/mandi_data.csv
 /backend/models/
+/backend/config/*.json
+.vscode/
+analysis_result.txt
+analyze_error_output.txt
+analyze_output.txt
+New Text Document.txt

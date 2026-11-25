@@ -1,0 +1,22 @@
+"""Check training report."""
+import pandas as pd
+
+df = pd.read_csv('daily_data/training_report.csv')
+print(f"Total models: {len(df)}")
+print(f"Avg MAPE: {df['mape'].mean():.2f}")
+print(f"Avg R2: {df['r2'].mean():.3f}")
+print(f"Avg Dir Accuracy: {df['dir_accuracy'].mean():.1f}")
+print()
+print("--- Best 10 Models (by MAPE) ---")
+best = df.nsmallest(10, 'mape')
+print(best[['commodity','mape','rmse','r2','dir_accuracy','rows']].to_string())
+print()
+print("--- Worst 5 Models ---")
+worst = df.nlargest(5, 'mape')
+print(worst[['commodity','mape','rmse','r2','dir_accuracy','rows']].to_string())
+print()
+print("--- Overall Stats ---")
+print(f"Models with MAPE < 5: {len(df[df['mape'] < 5])}")
+print(f"Models with MAPE < 8: {len(df[df['mape'] < 8])}")
+print(f"Models with R2 > 0.85: {len(df[df['r2'] > 0.85])}")
+print(f"Models with R2 > 0.90: {len(df[df['r2'] > 0.90])}")

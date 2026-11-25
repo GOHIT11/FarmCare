@@ -60,6 +60,7 @@ class AuthService {
     required String name,
     required String password,
     required String state,
+    String district = "",
     required String mandi,
     required List<String> crops,
   }) async {
@@ -72,6 +73,7 @@ class AuthService {
           'name': name,
           'password': password,
           'state': state,
+          'district': district,
           'mandi': mandi,
           'crops': crops,
         }),
@@ -90,6 +92,7 @@ class AuthService {
   Future<bool> updateProfile({
     required String name,
     required String state,
+    String district = "",
     required String mandi,
     required List<String> crops,
   }) async {
@@ -101,15 +104,16 @@ class AuthService {
         body: json.encode({
           'name': name,
           'state': state,
+          'district': district,
           'mandi': mandi,
           'crops': crops,
         }),
       );
 
       if (response.statusCode == 200) {
-        // Update local session
         if (currentUser != null) {
           currentUser!['state'] = state;
+          currentUser!['district'] = district;
           currentUser!['mandi'] = mandi;
           currentUser!['crops'] = crops;
           await _saveSession(currentUser!);

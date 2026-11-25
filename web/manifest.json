@@ -1,6 +1,6 @@
 {
-    "name": "mandipredict",
-    "short_name": "mandipredict",
+    "name": "FarmCare",
+    "short_name": "FarmCare",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

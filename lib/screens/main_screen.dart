@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
 import 'chat_screen.dart';
 import 'edit_profile_screen.dart';
+import '../services/localization.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -13,76 +14,87 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const DashboardScreen(), // Home
-    const PlaceholderWidget(title: "My Farms"), // Placeholder for "All Farms"
-    const PlaceholderWidget(
-      title: "Statistics",
-    ), // Placeholder for "Statistics/Trends"
-    const EditProfileScreen(), // My Profile
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
+    return ValueListenableBuilder<String>(
+      valueListenable: localeNotifier,
+      builder: (context, locale, child) {
+        final List<Widget> screens = [
+          const DashboardScreen(), // Home
+          PlaceholderWidget(
+              title: AppLocalizations.get(
+                  locale, 'all_farms')), // Placeholder for "All Farms"
+          PlaceholderWidget(
+              title: AppLocalizations.get(
+                  locale, 'statistics')), // Placeholder for "Statistics/Trends"
+          const EditProfileScreen(), // My Profile
+        ];
+
+        return Scaffold(
+          body: IndexedStack(index: _currentIndex, children: screens),
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
-          selectedItemColor: const Color(0xFF1B5E20), // Deep Green
-          unselectedItemColor: Colors.grey,
-          showUnselectedLabels: true,
-          selectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 12,
-          ),
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.agriculture_rounded),
-              label: 'My Farms',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.insert_chart_rounded),
-              label: 'Statistics',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_rounded),
-              label: 'My Profile',
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: _currentIndex == 0
-          ? FloatingActionButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ChatScreen()),
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) => setState(() => _currentIndex = index),
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.white,
+              selectedItemColor: const Color(0xFF1B5E20), // Deep Green
+              unselectedItemColor: Colors.grey,
+              showUnselectedLabels: true,
+              selectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
               ),
-              backgroundColor: const Color(0xFF1B5E20),
-              child: const Icon(Icons.chat_bubble_outline, color: Colors.white),
-            )
-          : null,
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.normal,
+                fontSize: 12,
+              ),
+              items: [
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.home_outlined),
+                  activeIcon: const Icon(Icons.home),
+                  label: AppLocalizations.get(locale, 'dashboard'),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.agriculture_outlined),
+                  activeIcon: const Icon(Icons.agriculture),
+                  label: AppLocalizations.get(locale, 'my_farms'),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.bar_chart_outlined),
+                  activeIcon: const Icon(Icons.bar_chart),
+                  label: AppLocalizations.get(locale, 'statistics'),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.person_outline),
+                  activeIcon: const Icon(Icons.person),
+                  label: AppLocalizations.get(locale, 'my_profile'),
+                ),
+              ],
+            ),
+          ),
+          floatingActionButton: _currentIndex == 0
+              ? FloatingActionButton(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ChatScreen()),
+                  ),
+                  backgroundColor: const Color(0xFF1B5E20),
+                  child: const Icon(Icons.chat_bubble_outline,
+                      color: Colors.white),
+                )
+              : null,
+        );
+      },
     );
   }
 }

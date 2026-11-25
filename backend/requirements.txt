@@ -7,3 +7,10 @@ joblib
 requests
 python-dotenv
 beautifulsoup4
+google-generativeai
+Pillow
+python-multipart
+xgboost
+google-api-python-client
+google-auth
+apscheduler

@@ -15,37 +15,55 @@ MASTER_DATA_FILE = os.path.join(os.path.dirname(__file__), "master_data.py")
 class OGDService:
     def __init__(self):
         self.api_key = API_KEY
+        self.is_offline = False
         
     def fetch_data(self, date_str=None, offset=0, limit=1000):
         """
         Fetch data from OGD API.
         date_str: "dd/mm/yyyy" (Optional filter)
         """
+        if self.is_offline:
+            return []
+            
         params = {
             "api-key": self.api_key,
             "format": "json",
             "limit": limit,
-            "offset": offset
+            "offset": offset,
+            "filters[state]": "Andhra Pradesh"
         }
         
         if date_str:
             # OGD Filter syntax: filters[field_name]
             params["filters[arrival_date]"] = date_str
             
-        try:
-            print(f"Fetching OGD data (Offset {offset})...")
-            response = requests.get(BASE_URL, params=params, timeout=30)
-            
-            if response.status_code != 200:
-                print(f"Error: {response.status_code} - {response.text}")
-                return []
+        retries = 3
+        for attempt in range(retries):
+            try:
+                print(f"Fetching OGD data (Offset {offset})... Attempt {attempt + 1}/{retries}")
+                response = requests.get(BASE_URL, params=params, timeout=30)
                 
-            data = response.json()
-            return data.get("records", [])
-            
-        except Exception as e:
-            print(f"Exception fetching OGD data: {e}")
-            return []
+                if response.status_code != 200:
+                    print(f"Error: {response.status_code} - {response.text}")
+                    if response.status_code in [429, 500, 502, 503, 504]:
+                        time.sleep(2 * (attempt + 1))
+                        continue
+                    return []
+                    
+                data = response.json()
+                return data.get("records", [])
+                
+            except requests.exceptions.RequestException as e:
+                print(f"Exception fetching OGD data: {e}")
+                if isinstance(e, (requests.exceptions.ConnectionError, requests.exceptions.Timeout)):
+                    print("Connection/Timeout error detected. Setting OGDService to offline mode.")
+                    self.is_offline = True
+                    return []
+                if attempt < retries - 1:
+                    time.sleep(2 * (attempt + 1))
+                else:
+                    return []
+        return []
 
     def fetch_daily_data(self, days_back=0):
         """
@@ -142,10 +160,20 @@ class OGDService:
             final_cols = ['state', 'mandi', 'commodity', 'date', 'min_price', 'max_price', 'modal_price', 'arrivals']
             for col in final_cols:
                 if col not in df_new.columns:
-                    df_new[col] = 0
+                    if col == 'state':
+                        df_new[col] = 'Andhra Pradesh'
+                    else:
+                        df_new[col] = 0
             df_new = df_new[final_cols]
             
-            print(f"  > New Batch: {len(df_new)} rows. Assigned Date: {df_new['date'].iloc[0]}")
+            # Filter to AP only
+            if 'state' in df_new.columns:
+                df_new = df_new[df_new['state'] == 'Andhra Pradesh']
+                if df_new.empty:
+                    print(f"  > No AP data found for this date. Skipping.")
+                    continue
+            
+            print(f"  > New AP Batch: {len(df_new)} rows. Assigned Date: {df_new['date'].iloc[0]}")
             
             # --- MERGE AND SAVE IMMEDIATELY ---
             if os.path.exists(DATA_FILE):

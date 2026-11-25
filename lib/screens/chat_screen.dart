@@ -2,14 +2,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../services/api_service.dart';
 import '../services/localization.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({Key? key}) : super(key: key);
+  const ChatScreen({super.key});
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
@@ -18,10 +21,87 @@ class _ChatScreenState extends State<ChatScreen> {
   final MandiApiService _apiService = MandiApiService();
   final ImagePicker _picker = ImagePicker();
 
-  // Message format: {'role': 'user' | 'bot', 'text': String, 'image': String?}
+  // Message format: {'role': 'user' | 'bot', 'text': String, 'image': String?, 'audio': String?}
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
   File? _selectedImage;
+
+  final AudioRecorder _audioRecorder = AudioRecorder();
+  bool _isRecording = false;
+
+  @override
+  void dispose() {
+    _audioRecorder.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startRecording() async {
+    try {
+      if (await Permission.microphone.request().isGranted) {
+        final dir = await getApplicationDocumentsDirectory();
+        final path =
+            '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        await _audioRecorder.start(
+          const RecordConfig(encoder: AudioEncoder.aacLc),
+          path: path,
+        );
+        setState(() {
+          _isRecording = true;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error starting record: $e");
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    try {
+      final path = await _audioRecorder.stop();
+      setState(() {
+        _isRecording = false;
+      });
+      if (path != null) {
+        // Automatically send audio message when recording stops
+        _sendAudioMessage(path);
+      }
+    } catch (e) {
+      debugPrint("Error stopping record: $e");
+    }
+  }
+
+  Future<void> _sendAudioMessage(String audioPath) async {
+    setState(() {
+      _messages.add({
+        'role': 'user',
+        'text': '🎤 Audio Message sent',
+        'image': null,
+        'audio': audioPath
+      });
+      _isLoading = true;
+    });
+    _scrollToBottom();
+
+    try {
+      final response =
+          await _apiService.sendChat("", null, audioPath: audioPath);
+      setState(() {
+        _messages.add({'role': 'bot', 'text': response});
+      });
+    } catch (e) {
+      setState(() {
+        _messages.add({
+          'role': 'bot',
+          'text':
+              "${AppLocalizations.get(localeNotifier.value, 'error_connect')}\n($e)",
+        });
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+      _scrollToBottom();
+    }
+  }
 
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -49,7 +129,8 @@ class _ChatScreenState extends State<ChatScreen> {
           children: <Widget>[
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Gallery'),
+              title:
+                  Text(AppLocalizations.get(localeNotifier.value, 'gallery')),
               onTap: () {
                 Navigator.of(context).pop();
                 _pickImage();
@@ -57,7 +138,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_camera),
-              title: const Text('Camera'),
+              title: Text(AppLocalizations.get(localeNotifier.value, 'camera')),
               onTap: () {
                 Navigator.of(context).pop();
                 _pickImageCamera();
@@ -98,7 +179,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add({
           'role': 'bot',
           'text':
-              "Error: Could not connect to Field Assistant. Please try again.\n($e)",
+              "${AppLocalizations.get(localeNotifier.value, 'error_connect')}\n($e)",
         });
       });
     } finally {
@@ -145,9 +226,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     final isUser = msg['role'] == 'user';
 
                     return Align(
-                      alignment: isUser
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
+                      alignment:
+                          isUser ? Alignment.centerRight : Alignment.centerLeft,
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         constraints: BoxConstraints(
@@ -168,7 +248,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withOpacity(0.2),
+                              color: Colors.grey.withValues(alpha: 0.2),
                               spreadRadius: 1,
                               blurRadius: 2,
                               offset: const Offset(0, 1),
@@ -227,7 +307,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
+                      color: Colors.grey.withValues(alpha: 0.2),
                       spreadRadius: 1,
                       blurRadius: 4,
                       offset: const Offset(0, -1),
@@ -247,14 +327,14 @@ class _ChatScreenState extends State<ChatScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  "Image selected",
+                                  AppLocalizations.get(
+                                      locale, 'image_selected'),
                                   style: TextStyle(color: Colors.grey[800]),
                                 ),
                               ),
                               IconButton(
                                 icon: const Icon(
                                   Icons.close,
-                                  color: Colors.red,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -273,6 +353,19 @@ class _ChatScreenState extends State<ChatScreen> {
                               color: Colors.green,
                             ),
                             onPressed: _showImagePickerModal,
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              _isRecording ? Icons.stop_circle : Icons.mic,
+                              color: _isRecording ? Colors.red : Colors.green,
+                            ),
+                            onPressed: () {
+                              if (_isRecording) {
+                                _stopRecording();
+                              } else {
+                                _startRecording();
+                              }
+                            },
                           ),
                           Expanded(
                             child: TextField(

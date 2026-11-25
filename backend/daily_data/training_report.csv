@@ -1,0 +1,54 @@
+commodity,mape,rmse,r2,dir_accuracy,rows,model_path
+Jowar(Sorghum),1.354699382836508,78.23230153098854,0.8089961200300898,82.80459770114943,181,D:\Mandi predict\backend\models\daily\daily_Jowar_Sorghum_.joblib
+Ridgeguard(Tori),2.178732924411121,99.01731485160256,0.7726486934311269,81.47126436781609,181,D:\Mandi predict\backend\models\daily\daily_Ridgeguard_Tori_.joblib
+Gur(Jaggery),2.2764045916442424,509.98804220218483,0.9889192862570397,81.78566411592917,3214,D:\Mandi predict\backend\models\daily\daily_Gur_Jaggery_.joblib
+Bengal Gram(Gram)(Whole),2.29949915873891,101.54188823579548,0.4845302502611949,88.3448275862069,181,D:\Mandi predict\backend\models\daily\daily_Bengal_Gram_Gram__Whole_.joblib
+Arhar(Tur/Red Gram)(Whole),2.5608390143427284,72.33992270963867,0.758569563806185,84.91954022988507,181,D:\Mandi predict\backend\models\daily\daily_Arhar_Tur_Red_Gram__Whole_.joblib
+Cotton,2.7160773245038405,214.87528942576006,0.8227963477741053,93.5752009184845,362,D:\Mandi predict\backend\models\daily\daily_Cotton.joblib
+Groundnut,2.7737739777052566,192.8842453028665,0.8947908030985413,97.09518477043673,1448,D:\Mandi predict\backend\models\daily\daily_Groundnut.joblib
+Sunflower,2.9599097295211756,120.2146059253602,0.5768676481207107,83.56321839080461,181,D:\Mandi predict\backend\models\daily\daily_Sunflower.joblib
+Castor Seed,2.9937674314693696,268.43115814039845,0.8153567521944552,95.87014470677836,543,D:\Mandi predict\backend\models\daily\daily_Castor_Seed.joblib
+Paddy(Common),3.4702203701981618,132.76360313283553,0.7635840495394078,91.4121699196326,362,D:\Mandi predict\backend\models\daily\daily_Paddy_Common_.joblib
+Foxtail Millet(Navane),3.7599505255070023,124.61399398788774,-0.5959081297585156,78.73563218390805,181,D:\Mandi predict\backend\models\daily\daily_Foxtail_Millet_Navane_.joblib
+Black Gram,3.956237564677921,202.45255300135702,-0.11153658255188556,78.09195402298852,181,D:\Mandi predict\backend\models\daily\daily_Black_Gram.joblib
+Brinjal,4.097517817909244,144.00945077043485,0.04767096406922888,77.44827586206897,181,D:\Mandi predict\backend\models\daily\daily_Brinjal.joblib
+Tobacco,4.150855302429085,122.38323105734564,-0.19629238590410703,86.89655172413794,181,D:\Mandi predict\backend\models\daily\daily_Tobacco.joblib
+Chili Red,4.186442875163723,143.24675788388345,0.11538780332317453,76.6896551724138,181,D:\Mandi predict\backend\models\daily\daily_Chili_Red.joblib
+Maize,4.439327708589291,112.45143425969653,0.8882225842304802,92.36280137772675,362,D:\Mandi predict\backend\models\daily\daily_Maize.joblib
+Bajra(Pearl Millet/Cumbu),4.455699704960807,129.00582536724636,-1.3066947408778344,82.75862068965516,181,D:\Mandi predict\backend\models\daily\daily_Bajra_Pearl_Millet_Cumbu_.joblib
+Mango,4.5565832109876965,210.06580691471132,0.5483702061068246,91.11766945925362,543,D:\Mandi predict\backend\models\daily\daily_Mango.joblib
+Paddy,4.819149940448438,117.64345724140249,0.788173976884541,94.81515499425947,362,D:\Mandi predict\backend\models\daily\daily_Paddy.joblib
+Bengal Gram,4.921004450818119,204.12804107822097,-1.3018722793166533,80.06896551724137,181,D:\Mandi predict\backend\models\daily\daily_Bengal_Gram.joblib
+Niger Seed(Ramtil),5.357581497886443,969.3662992437663,0.7597005744835551,78.12154696132598,4560,D:\Mandi predict\backend\models\daily\daily_Niger_Seed_Ramtil_.joblib
+Mousambi(Sweet Lime),5.6722067232612075,275.893274940559,0.6516080875262429,91.44890929965558,362,D:\Mandi predict\backend\models\daily\daily_Mousambi_Sweet_Lime_.joblib
+Wood,5.733469542478805,239.22110071325716,-0.3937498252572215,82.13793103448276,181,D:\Mandi predict\backend\models\daily\daily_Wood.joblib
+Soyabean,5.851731113498657,558.0565711983824,0.7688696089729318,92.33610341643582,1824,D:\Mandi predict\backend\models\daily\daily_Soyabean.joblib
+Rice,5.9541134386011,188.68326108889647,-0.5627787087456915,82.85057471264369,181,D:\Mandi predict\backend\models\daily\daily_Rice.joblib
+Ragi(Finger Millet),6.174165256580411,492.7633022468302,0.7694266582024636,74.75583906385381,7296,D:\Mandi predict\backend\models\daily\daily_Ragi_Finger_Millet_.joblib
+Green Gram(Moong)(Whole),6.239550971022229,996.6261304333577,0.7731384231884026,77.257324179154,6384,D:\Mandi predict\backend\models\daily\daily_Green_Gram_Moong__Whole_.joblib
+"Sesamum(Sesame,Gingelly,Til)",6.294819066696457,1077.9898529628326,0.7729054572044131,74.56302055782754,7296,"D:\Mandi predict\backend\models\daily\daily_Sesamum_Sesame,Gingelly,Til_.joblib"
+Sunflower Seed,6.913283919612299,495.7999830129299,-0.4680891009615653,67.77011494252874,181,D:\Mandi predict\backend\models\daily\daily_Sunflower_Seed.joblib
+Cauliflower,7.030506708590008,208.9152305903508,-0.9097635865438611,78.80459770114943,181,D:\Mandi predict\backend\models\daily\daily_Cauliflower.joblib
+Jute,7.048722683778097,584.0935483969613,0.7893009021456806,80.7513812154696,4560,D:\Mandi predict\backend\models\daily\daily_Jute.joblib
+Lime,7.783542242472985,326.0308919526944,0.6756892788525413,90.23650975889781,362,D:\Mandi predict\backend\models\daily\daily_Lime.joblib
+Black Gram(Urd Beans)(Whole),8.140210246178585,228.81230930397405,-2.376903646035259,72.59770114942529,181,D:\Mandi predict\backend\models\daily\daily_Black_Gram_Urd_Beans__Whole_.joblib
+Potato,8.55181611106901,186.530154500848,-2.3977335305322134,83.54022988505747,181,D:\Mandi predict\backend\models\daily\daily_Potato.joblib
+Sugarcane,8.899295427595977,374.25023880488783,0.7991127694039881,73.66364643127524,6384,D:\Mandi predict\backend\models\daily\daily_Sugarcane.joblib
+Green Chilli,9.506588071591324,463.4956407641109,0.8703243621939472,92.0837227371515,6428,D:\Mandi predict\backend\models\daily\daily_Green_Chilli.joblib
+Barley(Jau),10.150434737286727,171.77537422237523,0.8511509804870634,92.22654158616355,1824,D:\Mandi predict\backend\models\daily\daily_Barley_Jau_.joblib
+Copra,10.326902444473209,1342.731022880777,0.8464314997560265,82.12655770543822,6384,D:\Mandi predict\backend\models\daily\daily_Copra.joblib
+Wheat,10.848606752577457,240.85928100123988,0.8416505239619024,87.8945026357226,2736,D:\Mandi predict\backend\models\daily\daily_Wheat.joblib
+Safflower,11.08477269907472,626.6311705769002,0.8231090151679947,82.19907530604193,5472,D:\Mandi predict\backend\models\daily\daily_Safflower.joblib
+Cluster beans,11.939275361025285,335.26618261070513,-6.248860278245155,78.02298850574712,181,D:\Mandi predict\backend\models\daily\daily_Cluster_beans.joblib
+Rapeseed(Toria),12.456663209476398,591.7197395227121,0.5751350733566142,91.77650007371369,1824,D:\Mandi predict\backend\models\daily\daily_Rapeseed_Toria_.joblib
+Mustard,12.469880521362043,604.1287888609255,0.673425847979194,89.63223112206477,2736,D:\Mandi predict\backend\models\daily\daily_Mustard.joblib
+Lentil(Masur)(Whole),12.73881150185434,643.0186897313546,0.5567298822439795,93.00961381782629,1824,D:\Mandi predict\backend\models\daily\daily_Lentil_Masur__Whole_.joblib
+Jaggery,12.743795683300366,1743.9356228235695,0.6513711861678118,93.78340069275285,12856,D:\Mandi predict\backend\models\daily\daily_Jaggery.joblib
+Coconut,13.404194533414346,238.78382954737987,-2.8353038208020154,89.91044776119404,362,D:\Mandi predict\backend\models\daily\daily_Coconut.joblib
+Banana,14.543776155247462,821.2283498669645,0.6785059122173889,95.25404897298571,22498,D:\Mandi predict\backend\models\daily\daily_Banana.joblib
+Lemon,16.02371132712042,1373.0865652158636,0.585574049422936,94.06626218198127,9642,D:\Mandi predict\backend\models\daily\daily_Lemon.joblib
+Onion,17.837661792735982,1001.7740651637644,0.6768374346978645,93.2896788275647,16070,D:\Mandi predict\backend\models\daily\daily_Onion.joblib
+Turmeric,17.856931000795445,4358.493349537379,0.29678444001711635,95.16192364159875,20891,D:\Mandi predict\backend\models\daily\daily_Turmeric.joblib
+Red Chilli,18.42548115480454,5134.012662257674,0.2789536595868249,94.66184946764834,22498,D:\Mandi predict\backend\models\daily\daily_Red_Chilli.joblib
+Tomato,18.475020565588867,724.6968075165177,0.4815511100377051,95.58347902141195,22498,D:\Mandi predict\backend\models\daily\daily_Tomato.joblib
+Dry Chillies,19.719323272540684,5848.993465913249,-0.09258587831654244,81.28152994960136,3214,D:\Mandi predict\backend\models\daily\daily_Dry_Chillies.joblib

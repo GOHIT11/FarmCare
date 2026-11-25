@@ -73,32 +73,40 @@ class _SideMenuState extends State<SideMenu> {
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text(name),
-            accountEmail: const Text("Farmer Account"),
+            accountName: Text(name, style: const TextStyle(fontSize: 18)),
+            accountEmail: const Text("Farmer Account",
+                style: TextStyle(color: Colors.white70)),
+            currentAccountPictureSize: const Size.square(80),
             currentAccountPicture: GestureDetector(
               onTap: _pickImage,
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                backgroundImage: _imageFile != null
-                    ? FileImage(_imageFile!)
-                    : null,
-                child: _imageFile == null
-                    ? const Icon(
-                        Icons.add_a_photo,
-                        size: 30,
-                        color: Color(0xFF1B5E20),
-                      )
-                    : null,
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white,
+                    backgroundImage:
+                        _imageFile != null ? FileImage(_imageFile!) : null,
+                  ),
+                  if (_imageFile == null)
+                    const Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.add_a_photo,
+                          size: 36,
+                          color: Color(0xFF1B5E20),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             decoration: const BoxDecoration(
               color: Color(0xFF1B5E20),
               image: DecorationImage(
-                image: AssetImage(
-                  'assets/images/splash_bg.png',
-                ), // Reuse splash bg for header? nice touch
+                image: AssetImage('assets/images/splash_bg.png'),
                 fit: BoxFit.cover,
-                opacity: 0.2,
+                opacity: 0.3,
               ),
             ),
           ),
@@ -160,9 +168,8 @@ class _SideMenuState extends State<SideMenu> {
                     name,
                     style: TextStyle(
                       color: isSelected ? Colors.green : Colors.black,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
                   trailing: isSelected

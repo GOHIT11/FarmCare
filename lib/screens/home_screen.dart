@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/localization.dart';
 import '../services/data_localization.dart';
-// import '../main.dart'; // for localeNotifier
 import 'result_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -15,18 +14,19 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final MandiApiService _apiService = MandiApiService();
 
-  // Master Data: {State: {Mandi: [Commodities]}}
+  // Master Data: {Mandi: [Commodities]} under "Andhra Pradesh"
   Map<String, dynamic> _masterData = {};
+  // District -> Mandi mapping
+  Map<String, dynamic> _districtMandis = {};
 
-  List<String> _states = [];
+  List<String> _districts = [];
   List<String> _mandis = [];
   List<String> _commodities = [];
 
-  String? _selectedState;
+  String? _selectedDistrict;
   String? _selectedMandi;
   String? _selectedCommodity;
 
-  // New Controller Fields - Empty by default
   final TextEditingController _qtyController = TextEditingController();
   final TextEditingController _storageController = TextEditingController();
   final TextEditingController _storageCostController = TextEditingController();
@@ -52,13 +52,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final options = await _apiService.fetchOptions();
-      setState(() {
-        _masterData = options;
-        _states = _masterData.keys.toList();
-        _states.sort();
+      final districts = await _apiService.fetchDistricts();
 
-        if (_states.isNotEmpty) {
-          _selectedState = _states[0];
+      setState(() {
+        _masterData = options['Andhra Pradesh'] ?? options;
+        _districtMandis = districts;
+        _districts = _districtMandis.keys.toList();
+        _districts.sort();
+
+        if (_districts.isNotEmpty) {
+          _selectedDistrict = _districts[0];
           _updateMandis();
         }
 
@@ -73,9 +76,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _updateMandis() {
-    if (_selectedState == null) return;
-    final mandisMap = _masterData[_selectedState] as Map<String, dynamic>;
-    _mandis = mandisMap.keys.toList();
+    if (_selectedDistrict == null) return;
+    final mandisList = _districtMandis[_selectedDistrict] as List? ?? [];
+    _mandis = mandisList.cast<String>().toSet().toList();
     _mandis.sort();
 
     if (_mandis.isNotEmpty) {
@@ -89,9 +92,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _updateCommodities() {
-    if (_selectedState == null || _selectedMandi == null) return;
-    final commoditiesList = _masterData[_selectedState][_selectedMandi] as List;
-    _commodities = commoditiesList.cast<String>();
+    if (_selectedMandi == null) return;
+    final commoditiesList = _masterData[_selectedMandi] as List? ?? [];
+    _commodities = commoditiesList.cast<String>().toSet().toList();
     _commodities.sort();
 
     if (_commodities.isNotEmpty) {
@@ -101,7 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Action 1: Price Forecast Only
   void _getForecast() async {
     if (_selectedMandi == null || _selectedCommodity == null) return;
 
@@ -127,14 +129,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Action 2: Profit Optimization
   void _getOptimizedPlan() async {
     if (_selectedMandi == null || _selectedCommodity == null) {
       _showError("Please select Mandi and Commodity");
       return;
     }
 
-    // Quick validation
     if (_qtyController.text.isEmpty ||
         _storageController.text.isEmpty ||
         _transportCostController.text.isEmpty) {
@@ -204,7 +204,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return Scaffold(
           appBar: AppBar(
             title: Text(AppLocalizations.get(locale, 'farmer_advisor')),
-            backgroundColor: const Color(0xFF1B5E20), // Dark Green
+            backgroundColor: const Color(0xFF1B5E20),
             foregroundColor: Colors.white,
             actions: [
               Row(
@@ -233,362 +233,368 @@ class _HomeScreenState extends State<HomeScreen> {
           body: _isLoadingOptions
               ? const Center(child: CircularProgressIndicator())
               : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
-                        size: 48,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Connection Error',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          _error!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // --- SELECTION CARD ---
-                      Card(
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              // State Dropdown
-                              InputDecorator(
-                                decoration: InputDecoration(
-                                  labelText: AppLocalizations.get(
-                                    locale,
-                                    'select_state',
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _selectedState,
-                                    isDense: true,
-                                    onChanged: (val) {
-                                      setState(() {
-                                        _selectedState = val;
-                                        _updateMandis();
-                                      });
-                                    },
-                                    items: _states.map((s) {
-                                      return DropdownMenuItem(
-                                        value: s,
-                                        child: Text(
-                                          DataLocalization.get(s, locale),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              // Mandi Dropdown
-                              InputDecorator(
-                                decoration: InputDecoration(
-                                  labelText: AppLocalizations.get(
-                                    locale,
-                                    'select_mandi',
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _selectedMandi,
-                                    isDense: true,
-                                    onChanged: (val) {
-                                      setState(() {
-                                        _selectedMandi = val;
-                                        _updateCommodities();
-                                      });
-                                    },
-                                    items: _mandis.map((m) {
-                                      return DropdownMenuItem(
-                                        value: m,
-                                        child: Text(
-                                          DataLocalization.get(m, locale),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              // Commodity Dropdown
-                              InputDecorator(
-                                decoration: InputDecoration(
-                                  labelText: AppLocalizations.get(
-                                    locale,
-                                    'select_commodity',
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 12,
-                                  ),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _selectedCommodity,
-                                    isDense: true,
-                                    onChanged: (val) {
-                                      setState(() {
-                                        _selectedCommodity = val;
-                                      });
-                                    },
-                                    items: _commodities.map((c) {
-                                      return DropdownMenuItem(
-                                        value: c,
-                                        child: Text(
-                                          DataLocalization.get(c, locale),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // --- BUTTON: PRICE FORECAST ---
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(
-                              0xFF1B5E20,
-                            ), // Dark Green
-                            side: const BorderSide(color: Color(0xFF1B5E20)),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          onPressed: _getForecast,
-                          icon: const Icon(Icons.trending_up),
-                          label: const Text(
-                            "Get 7-Day Price Forecast",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Divider(),
-                      const SizedBox(height: 16),
-
-                      // --- OPTIMIZATION SECTION HEADER ---
-                      Text(
-                        AppLocalizations.get(locale, 'farmer_profile_opt'),
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        AppLocalizations.get(locale, 'enter_details'),
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // --- PROFILE INPUT GRID ---
-                      GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 2,
-                        childAspectRatio: 2.5,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Quantity
-                          TextField(
-                            controller: _qtyController,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: AppLocalizations.get(
-                                locale,
-                                'quantity_q',
-                              ), // Quantity (Quintals)
-                              prefixIcon: const Icon(
-                                Icons.scale,
-                                color: Colors.green,
-                                size: 20,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 48,
                           ),
-                          // Max Storage
-                          TextField(
-                            controller: _storageController,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: AppLocalizations.get(
-                                locale,
-                                'max_storage',
-                              ), // Max Storage (Days)
-                              prefixIcon: const Icon(
-                                Icons.calendar_today,
-                                color: Colors.green,
-                                size: 20,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Connection Error',
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
-                          // Storage Cost
-                          TextField(
-                            controller: _storageCostController,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: AppLocalizations.get(
-                                locale,
-                                'storage_cost',
-                              ), // Storage Cost/Day
-                              prefixIcon: const Icon(
-                                Icons.money,
-                                color: Colors.green,
-                                size: 20,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                            ),
-                          ),
-                          // Transport Cost
-                          TextField(
-                            controller: _transportCostController,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: AppLocalizations.get(
-                                locale,
-                                'transport_cost',
-                              ), // Transport Cost/km
-                              prefixIcon: const Icon(
-                                Icons.local_shipping,
-                                color: Colors.green,
-                                size: 20,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              _error!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.grey),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      // Distance (Full Width)
-                      TextField(
-                        controller: _distController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: AppLocalizations.get(
-                            locale,
-                            'distance_km',
-                          ), // Distance to Mandi (Km)
-                          prefixIcon: const Icon(
-                            Icons.map,
-                            color: Colors.green,
-                            size: 20,
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // AP Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.location_on,
+                                    color: Color(0xFF1B5E20), size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "Andhra Pradesh",
+                                  style: TextStyle(
+                                    color: const Color(0xFF1B5E20),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
+                          const SizedBox(height: 12),
 
-                      // --- BUTTON: CALCULATE PROFIT ---
-                      SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton.icon(
-                          onPressed: _getOptimizedPlan,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(
-                              0xFF1B5E20,
-                            ), // Dark Green
-                            foregroundColor: Colors.white,
+                          // --- SELECTION CARD ---
+                          Card(
+                            elevation: 4,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            elevation: 5,
-                          ),
-                          icon: const Icon(Icons.rocket_launch),
-                          label: Text(
-                            AppLocalizations.get(locale, 'calculate_profit'),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: [
+                                  // District Dropdown
+                                  InputDecorator(
+                                    decoration: InputDecoration(
+                                      labelText: AppLocalizations.get(
+                                        locale,
+                                        'select_district',
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: _selectedDistrict,
+                                        isDense: true,
+                                        isExpanded: true,
+                                        onChanged: (val) {
+                                          setState(() {
+                                            _selectedDistrict = val;
+                                            _updateMandis();
+                                          });
+                                        },
+                                        items: _districts.map((d) {
+                                          return DropdownMenuItem(
+                                            value: d,
+                                            child: Text(
+                                              DataLocalization.get(d, locale),
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Mandi Dropdown
+                                  InputDecorator(
+                                    decoration: InputDecoration(
+                                      labelText: AppLocalizations.get(
+                                        locale,
+                                        'select_mandi',
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: _selectedMandi,
+                                        isDense: true,
+                                        isExpanded: true,
+                                        onChanged: (val) {
+                                          setState(() {
+                                            _selectedMandi = val;
+                                            _updateCommodities();
+                                          });
+                                        },
+                                        items: _mandis.map((m) {
+                                          return DropdownMenuItem(
+                                            value: m,
+                                            child: Text(
+                                              DataLocalization.get(m, locale),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Commodity Dropdown
+                                  InputDecorator(
+                                    decoration: InputDecoration(
+                                      labelText: AppLocalizations.get(
+                                        locale,
+                                        'select_commodity',
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: _selectedCommodity,
+                                        isDense: true,
+                                        isExpanded: true,
+                                        onChanged: (val) {
+                                          setState(() {
+                                            _selectedCommodity = val;
+                                          });
+                                        },
+                                        items: _commodities.map((c) {
+                                          return DropdownMenuItem(
+                                            value: c,
+                                            child: Text(
+                                              DataLocalization.get(c, locale),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
+                          const SizedBox(height: 24),
+
+                          // --- BUTTON: DAILY PRICE FORECAST ---
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF1B5E20),
+                                side:
+                                    const BorderSide(color: Color(0xFF1B5E20)),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                              onPressed: _getForecast,
+                              icon: const Icon(Icons.trending_up),
+                              label: const Text(
+                                "Get 7-Day Daily Forecast",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          const Divider(),
+                          const SizedBox(height: 16),
+
+                          // --- OPTIMIZATION SECTION ---
+                          Text(
+                            AppLocalizations.get(locale, 'farmer_profile_opt'),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Enter your farming and selling details below to calculate the best time to sell your crop and maximize profit.",
+                            style: TextStyle(
+                                color: Colors.grey[700], fontSize: 14),
+                          ),
+                          const SizedBox(height: 24),
+
+                          _buildOptimizationField(
+                            controller: _qtyController,
+                            label: "Quantity to Sell (Quintals)",
+                            hint: "Example: 10",
+                            helper:
+                                "Enter how much crop you want to sell in the market.",
+                            icon: Icons.scale,
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildOptimizationField(
+                            controller: _storageController,
+                            label: "Maximum Storage Days",
+                            hint: "Example: 5",
+                            helper:
+                                "How many days can you store this crop before selling?",
+                            icon: Icons.calendar_today,
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildOptimizationField(
+                            controller: _storageCostController,
+                            label: "Storage Cost (₹ / day)",
+                            hint: "Example: 50",
+                            helper:
+                                "Cost of storing the crop per day (cold storage or warehouse).",
+                            icon: Icons.money,
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildOptimizationField(
+                            controller: _transportCostController,
+                            label: "Transport Cost (₹)",
+                            hint: "Example: 300",
+                            helper:
+                                "Total cost to transport the crop to the mandi.",
+                            icon: Icons.local_shipping,
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildOptimizationField(
+                            controller: _distController,
+                            label: "Distance to Mandi (km)",
+                            hint: "Example: 15",
+                            helper:
+                                "Distance from your farm to the selected mandi.",
+                            icon: Icons.map,
+                          ),
+                          const SizedBox(height: 24),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 55,
+                            child: ElevatedButton.icon(
+                              onPressed: _getOptimizedPlan,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1B5E20),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                elevation: 5,
+                              ),
+                              icon: const Icon(Icons.rocket_launch),
+                              label: Text(
+                                AppLocalizations.get(
+                                    locale, 'calculate_profit'),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                        ],
                       ),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
+                    ),
         );
       },
+    );
+  }
+
+  Widget _buildOptimizationField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required String helper,
+    required IconData icon,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: Colors.grey.shade400),
+            prefixIcon: Icon(icon, color: Colors.green, size: 22),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(vertical: 16),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          helper,
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+        ),
+      ],
     );
   }
 }

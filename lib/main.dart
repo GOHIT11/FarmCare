@@ -15,16 +15,16 @@ class MandiPredictApp extends StatelessWidget {
       valueListenable: localeNotifier,
       builder: (context, localeCode, child) {
         return MaterialApp(
-          title: 'Mandi Price Predictor',
+          title: 'FarmCare',
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF1B5E20), // Deep Forest Green (Match Login)
+              seedColor:
+                  const Color(0xFF1B5E20), // Deep Forest Green (Match Login)
               primary: const Color(0xFF1B5E20),
               secondary: const Color(0xFF66BB6A),
-              surface: Colors.white,
-              background: const Color(0xFFF1F8E9),
+              surface: const Color(0xFFF1F8E9),
             ),
             scaffoldBackgroundColor: const Color(0xFFF1F8E9),
 
@@ -60,7 +60,8 @@ class MandiPredictApp extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 2),
+                borderSide:
+                    const BorderSide(color: Color(0xFF1B5E20), width: 2),
               ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 24,
@@ -95,12 +96,13 @@ class MandiPredictApp extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1B5E20), // Dark Green
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 32),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 18, horizontal: 32),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
                 elevation: 4,
-                shadowColor: const Color(0xFF1B5E20).withOpacity(0.5),
+                shadowColor: const Color(0xFF1B5E20).withAlpha(128),
                 textStyle: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

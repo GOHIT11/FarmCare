@@ -9,8 +9,7 @@ def get_forecast(lat, lon, days=7):
     forecast = []
     try:
         # Open-Meteo API (Free for non-commercial use, excellent for this demo)
-        # Added &current=...
-        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,weather_code&daily=temperature_2m_max,relative_humidity_2m_mean,precipitation_sum&timezone=auto&forecast_days={days}"
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,relative_humidity_2m_mean,precipitation_sum,wind_speed_10m_max&timezone=auto&forecast_days={days}"
         
         response = requests.get(url, timeout=5)
         response.raise_for_status()
@@ -21,6 +20,7 @@ def get_forecast(lat, lon, days=7):
         temp_now = current.get("temperature_2m", 0.0)
         hum_now = current.get("relative_humidity_2m", 0.0)
         code_now = current.get("weather_code", 0)
+        wind_now = current.get("wind_speed_10m", 0.0)
 
         # 2. Parse Daily
         daily = data.get("daily", {})
@@ -29,20 +29,23 @@ def get_forecast(lat, lon, days=7):
         hums = daily.get("relative_humidity_2m_mean", []) 
         if not hums: hums = [50] * len(dates)
         rains = daily.get("precipitation_sum", [])
+        winds = daily.get("wind_speed_10m_max", [])
         
         for i in range(len(dates)):
             day_data = {
                 "date": dates[i],
-                "temp_max": temps[i] if i < len(temps) else 30.0, # Renamed key for clarity, but keeping compat logic below
-                "temp_avg": temps[i] if i < len(temps) else 30.0, # Keeping old key for compatibility
+                "temp_max": temps[i] if i < len(temps) else 30.0, 
+                "temp_avg": temps[i] if i < len(temps) else 30.0, 
                 "humidity": hums[i] if i < len(hums) else 50.0,
-                "rain_mm": rains[i] if i < len(rains) else 0.0
+                "rain_mm": rains[i] if i < len(rains) else 0.0,
+                "wind_speed_max": winds[i] if i < len(winds) else 0.0
             }
             # Inject Current Temp into TODAY (first element)
             if i == 0:
                 day_data["temp_now"] = temp_now
                 day_data["humidity_now"] = hum_now
                 day_data["code_now"] = code_now
+                day_data["wind_now"] = wind_now
             
             forecast.append(day_data)
             

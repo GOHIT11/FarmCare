@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../models/prediction_response.dart';
 import '../services/localization.dart';
 // import '../main.dart'; // for localeNotifier
@@ -55,17 +54,46 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Widget _buildStandardUI(BuildContext context, String locale) {
-    // Map PredictionResponse to the format expected by _buildGenericChart
-    final chartData = widget.prediction!.predictions.asMap().entries.map((e) {
-      double factor = _isQuintal ? 1.0 : 100.0;
-      return {
-        'date': e.value.date.toString().substring(0, 10),
-        'predicted_price': e.value.predictedPrice / factor,
-        'day_offset': e.key,
-      };
-    }).toList();
+    String unit = _isQuintal ? "Quintal" : "kg";
+    double factor = _isQuintal ? 1.0 : 100.0;
 
-    String unit = _isQuintal ? "/Q" : "/kg";
+    final predictions = widget.prediction!.predictions;
+    double currentPrice = 0.0;
+    double futurePrice = 0.0;
+    if (predictions.isNotEmpty) {
+      currentPrice = predictions.first.predictedPrice / factor;
+      futurePrice = predictions.last.predictedPrice / factor;
+    }
+    double priceChange = futurePrice - currentPrice;
+
+    // Evaluate raw change per quintal to apply the 50 Rs threshold
+    double rawCurrent =
+        predictions.isNotEmpty ? predictions.first.predictedPrice : 0.0;
+    double rawFuture =
+        predictions.isNotEmpty ? predictions.last.predictedPrice : 0.0;
+    double rawChange = rawFuture - rawCurrent;
+
+    String arrow = "➡";
+    String trendText = "Stable Market";
+    String message = "Prices are expected to remain stable.";
+    Color trendColor = Colors.grey;
+
+    if (rawChange > 50) {
+      arrow = "⬆";
+      trendText = "Rising Market";
+      message = "Prices are expected to rise. Farmers can wait before selling.";
+      trendColor = Colors.green;
+    } else if (rawChange < -50) {
+      arrow = "⬇";
+      trendText = "Falling Market";
+      message =
+          "Prices are expected to fall. Selling soon may give a better price.";
+      trendColor = Colors.red;
+    }
+
+    String changeText = priceChange == 0
+        ? "No change expected"
+        : "₹${priceChange.abs().toStringAsFixed(0)} ${priceChange > 0 ? "increase" : "decrease"} in next 7 days";
 
     return Scaffold(
       appBar: AppBar(
@@ -102,25 +130,81 @@ class _ResultScreenState extends State<ResultScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "${AppLocalizations.get(locale, 'market_forecast')} (₹$unit)",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            // Farmer Advisory Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Farmer Advisory',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  const Text('Current Price',
+                      style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text('₹${currentPrice.toStringAsFixed(0)} / $unit',
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  const Text('Market Trend',
+                      style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Text(arrow,
+                          style: TextStyle(fontSize: 22, color: trendColor)),
+                      const SizedBox(width: 8),
+                      Text(trendText,
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: trendColor)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Expected Change',
+                      style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text(changeText,
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 16),
+                  const Text('Recommendation',
+                      style: TextStyle(color: Colors.grey, fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text(message,
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w500)),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            SizedBox(height: 250, child: _buildGenericChart(chartData)),
             const SizedBox(height: 20),
 
             Text(
               AppLocalizations.get(locale, 'details'),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
+            const SizedBox(height: 10),
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: widget.prediction!.predictions.length,
               itemBuilder: (ctx, i) {
                 final p = widget.prediction!.predictions[i];
-                double factor = _isQuintal ? 1.0 : 100.0;
                 double price = p.predictedPrice / factor;
                 return Card(
                   child: ListTile(
@@ -133,7 +217,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       "${AppLocalizations.get(locale, 'date')}: ${p.date.toString().substring(0, 10)}",
                     ),
                     trailing: Text(
-                      "₹${price.toStringAsFixed(2)}",
+                      "₹${price.toStringAsFixed(0)}",
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -170,12 +254,6 @@ class _ResultScreenState extends State<ResultScreen> {
       );
     }
 
-    // We need to pass converted data to the chart too
-    final chartData = alternatives.map((e) {
-      final p = (e['predicted_price'] as num).toDouble();
-      return {...e, 'predicted_price': p / factor};
-    }).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.get(locale, 'best_profit_calc')),
@@ -209,15 +287,6 @@ class _ResultScreenState extends State<ResultScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 0. Chart (Restored)
-            Text(
-              "${AppLocalizations.get(locale, 'price_trend')} (₹/$unit)",
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(height: 200, child: _buildGenericChart(chartData)),
-            const SizedBox(height: 20),
-
             // 1. Hero Card: Best Action
             Card(
               color: Colors.green.shade50,
@@ -298,8 +367,8 @@ class _ResultScreenState extends State<ResultScreen> {
                     leading: CircleAvatar(
                       backgroundColor: isBest
                           ? ((item['net_profit'] as num) < 0
-                                ? Colors.red
-                                : Colors.green)
+                              ? Colors.red
+                              : Colors.green)
                           : Colors.grey.shade300,
                       child: Text(
                         "${item['day_offset']}d",
@@ -331,71 +400,6 @@ class _ResultScreenState extends State<ResultScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildGenericChart(List<dynamic> alternatives) {
-    // Sort by date/day_offset for plotting
-    final sorted = List.from(alternatives)
-      ..sort((a, b) => (a['day_offset'] as int).compareTo(b['day_offset']));
-
-    if (sorted.isEmpty) return const Center(child: Text("No Data"));
-
-    final prices = sorted
-        .map((e) => (e['predicted_price'] as num).toDouble())
-        .toList();
-    final minPrice = prices.reduce((a, b) => a < b ? a : b);
-    final maxPrice = prices.reduce((a, b) => a > b ? a : b);
-
-    return LineChart(
-      LineChartData(
-        gridData: FlGridData(show: true, drawVerticalLine: false),
-        titlesData: FlTitlesData(
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                final index = value.toInt();
-                if (index >= 0 && index < sorted.length) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      "${sorted[index]['day_offset']}d",
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                  );
-                }
-                return const Text('');
-              },
-              interval: 1,
-            ),
-          ),
-          leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-        ),
-        borderData: FlBorderData(show: false),
-        minY: minPrice * 0.9,
-        maxY: maxPrice * 1.1,
-        lineBarsData: [
-          LineChartBarData(
-            spots: sorted.asMap().entries.map((e) {
-              return FlSpot(
-                e.key.toDouble(),
-                (e.value['predicted_price'] as num).toDouble(),
-              );
-            }).toList(),
-            isCurved: true,
-            color: const Color(0xFF1B5E20), // Dark Green
-            barWidth: 3,
-            dotData: FlDotData(show: true),
-            belowBarData: BarAreaData(
-              show: true,
-              color: const Color(0xFF1B5E20).withValues(alpha: 0.1),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -31,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
           // Background Image
           Image.asset('assets/images/splash_bg.png', fit: BoxFit.cover),
           // Dark Overlay for readability
-          Container(color: Colors.black.withOpacity(0.4)),
+          Container(color: Colors.black.withValues(alpha: 0.4)),
           // Centered Content
           Center(
             child: Column(
@@ -41,11 +41,11 @@ class _SplashScreenState extends State<SplashScreen> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 15,
                         spreadRadius: 5,
                       ),
@@ -63,7 +63,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 const SizedBox(height: 10),
                 // Title Text
                 const Text(
-                  "Mandi Predict",
+                  "FarmCare",
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.bold,

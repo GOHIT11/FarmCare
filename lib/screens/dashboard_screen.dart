@@ -53,7 +53,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         url,
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'state': user['state'],
+          'state': 'Andhra Pradesh',
+          'district': user['district'] ?? '',
           'mandi': user['mandi'],
           'crops': user['crops'],
         }),
@@ -113,52 +114,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(width: 8),
             ],
           ),
-
           drawer: const SideMenu(),
           body: _isLoading
               ? const FarmerLoadingWidget(message: "Fetching mandi rates...")
               : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: Colors.red,
-                        size: 48,
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 48,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Connection Error',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              _error!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: _fetchDashboard,
+                            icon: const Icon(Icons.refresh),
+                            label: Text(AppLocalizations.get(locale, 'retry')),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Connection Error',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      Padding(
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _fetchDashboard,
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          _error!,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.grey),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [_buildDashboardContent()],
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: _fetchDashboard,
-                        icon: const Icon(Icons.refresh),
-                        label: Text(AppLocalizations.get(locale, 'retry')),
-                      ),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _fetchDashboard,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [_buildDashboardContent()],
                     ),
-                  ),
-                ),
           floatingActionButton: FloatingActionButton.extended(
             backgroundColor: const Color(0xFF1B5E20), // Match Theme
             icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
@@ -204,7 +204,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1B5E20).withOpacity(0.3),
+                color: const Color(0xFF1B5E20).withValues(alpha: 0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -252,8 +252,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 weather['today']['condition'] == "Sunny"
                     ? (locale == 'hi' ? "साफ़ मौसम" : "Sunny")
                     : weather['today']['condition'] == "Rainy"
-                    ? (locale == 'hi' ? "बरसात" : "Rainy")
-                    : weather['today']['condition'],
+                        ? (locale == 'hi' ? "बरसात" : "Rainy")
+                        : weather['today']['condition'],
                 style: const TextStyle(fontSize: 16, color: Colors.white),
               ),
               if (alert != null) ...[
@@ -261,7 +261,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -300,7 +300,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _buildMultiLineChart(graphData),
         const SizedBox(height: 30),
 
-        // 3. Smart Advisory
+        // 4. Smart Advisory
         Row(
           children: [
             const Icon(Icons.psychology_alt, color: Color(0xFF1B5E20)),
@@ -308,9 +308,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               AppLocalizations.get(locale, 'smart_advisory'),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF1B5E20),
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1B5E20),
+                  ),
             ),
           ],
         ),
@@ -420,8 +420,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: Text(
                 DataLocalization.get(cropName, locale),
                 style: const TextStyle(fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              subtitle: Row(
+              subtitle: Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 4,
                 children: [
                   Text(
                     AppLocalizations.get(locale, 'today_label'),
@@ -434,7 +438,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       color: isUpdated ? Colors.black : Colors.orange,
                     ),
                   ),
-                  const SizedBox(width: 8),
                   if (isUpdated)
                     PredictionBadge(
                       status: series['current_status'] ?? 'unknown',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/api_service.dart';
+import '../services/localization.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -17,14 +18,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _authService = AuthService();
 
   Map<String, dynamic> _masterData = {};
-  List<String> _states = [];
+  Map<String, dynamic> _districtMandis = {};
+  List<String> _districts = [];
   List<String> _mandis = [];
 
+  // Multi-mandi selection
+  final List<String> _selectedMandis = [];
+  // Crops aggregated from all selected mandis
   List<String> _availableCrops = [];
   final List<String> _selectedCrops = [];
 
-  String? _selectedState;
-  String? _selectedMandi;
+  String? _selectedDistrict;
 
   bool _isLoading = false;
   bool _isPasswordVisible = false;
@@ -38,33 +42,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _loadOptions() async {
     try {
       final data = await _apiService.fetchOptions();
+      final districts = await _apiService.fetchDistricts();
       setState(() {
-        _masterData = data;
-        _states = _masterData.keys.toList()..sort();
+        _masterData = data['Andhra Pradesh'] ?? data;
+        _districtMandis = districts;
+        _districts = _districtMandis.keys.toList()..sort();
       });
     } catch (e) {
       // Handle error
     }
   }
 
-  void _onStateChanged(String? val) {
+  void _onDistrictChanged(String? val) {
     setState(() {
-      _selectedState = val;
-      _mandis = (_masterData[val!] as Map<String, dynamic>).keys.toList()
-        ..sort();
-      _selectedMandi = null;
+      _selectedDistrict = val;
+      final mandisList = _districtMandis[val!] as List? ?? [];
+      _mandis = mandisList.cast<String>().toSet().toList()..sort();
+      _selectedMandis.clear();
+      _availableCrops = [];
+      _selectedCrops.clear();
+    });
+  }
+
+  void _onMandiToggled(String mandi, bool selected) {
+    setState(() {
+      if (selected) {
+        _selectedMandis.add(mandi);
+      } else {
+        _selectedMandis.remove(mandi);
+      }
+      // Aggregate crops from ALL selected mandis
+      final Set<String> allCrops = {};
+      for (final m in _selectedMandis) {
+        if (_masterData.containsKey(m)) {
+          final rawCrops = _masterData[m] as List;
+          allCrops.addAll(rawCrops.cast<String>());
+        }
+      }
+      _availableCrops = allCrops.toList()..sort();
+      // Remove any selected crops that are no longer available
+      _selectedCrops.removeWhere((c) => !_availableCrops.contains(c));
     });
   }
 
   void _register() async {
     if (_nameController.text.isEmpty ||
         _passController.text.isEmpty ||
-        _selectedState == null ||
-        _selectedMandi == null ||
+        _selectedDistrict == null ||
+        _selectedMandis.isEmpty ||
         _selectedCrops.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Please fill all fields")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                "Please fill all fields and select at least one mandi and crop")),
+      );
       return;
     }
 
@@ -72,8 +103,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final success = await _authService.register(
       name: _nameController.text,
       password: _passController.text,
-      state: _selectedState!,
-      mandi: _selectedMandi!,
+      state: "Andhra Pradesh",
+      district: _selectedDistrict!,
+      mandi: _selectedMandis.join(","), // Store as comma-separated
       crops: _selectedCrops,
     );
     setState(() => _isLoading = false);
@@ -84,9 +116,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       Navigator.pop(context);
     } else if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Registration Failed")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registration Failed")),
+      );
     }
   }
 
@@ -105,7 +137,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: Stack(
         children: [
-          // Background Curve
           Positioned(
             top: 0,
             left: 0,
@@ -125,7 +156,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           ),
-
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -139,7 +169,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -148,31 +178,56 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Center(
+                        Center(
                           child: Text(
-                            "Join Mandi Predict",
-                            style: TextStyle(
+                            AppLocalizations.get(
+                                localeNotifier.value, 'join_mandi'),
+                            style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: Color(0xFF1B5E20),
                             ),
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              AppLocalizations.get(
+                                  localeNotifier.value, 'for_ap_farmers'),
+                              style: const TextStyle(
+                                color: Color(0xFF1B5E20),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 24),
 
+                        // Name
                         TextField(
                           controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: "Full Name",
-                            prefixIcon: Icon(Icons.person),
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.get(
+                                localeNotifier.value, 'full_name'),
+                            prefixIcon: const Icon(Icons.person),
                           ),
                         ),
                         const SizedBox(height: 16),
+                        // Password
                         TextField(
                           controller: _passController,
                           obscureText: !_isPasswordVisible,
                           decoration: InputDecoration(
-                            labelText: "Password",
+                            labelText: AppLocalizations.get(
+                                localeNotifier.value, 'password'),
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -181,64 +236,84 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     : Icons.visibility_off,
                               ),
                               onPressed: () {
-                                setState(() {
-                                  _isPasswordVisible = !_isPasswordVisible;
-                                });
+                                setState(() =>
+                                    _isPasswordVisible = !_isPasswordVisible);
                               },
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
+                        // District Dropdown
                         DropdownButtonFormField<String>(
-                          initialValue: _selectedState,
+                          initialValue: _selectedDistrict,
                           decoration: const InputDecoration(
-                            labelText: "Select State",
+                            labelText: "Select District",
                             prefixIcon: Icon(Icons.map),
                           ),
-                          onChanged: _onStateChanged,
-                          items: _states
-                              .map(
-                                (s) =>
-                                    DropdownMenuItem(value: s, child: Text(s)),
-                              )
+                          onChanged: _onDistrictChanged,
+                          items: _districts
+                              .map((d) =>
+                                  DropdownMenuItem(value: d, child: Text(d)))
                               .toList(),
                         ),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedMandi,
-                          decoration: const InputDecoration(
-                            labelText: "Select Mandi",
-                            prefixIcon: Icon(Icons.store),
+                        const SizedBox(height: 20),
+
+                        // Multi-Mandi Selection (Chips)
+                        if (_selectedDistrict != null &&
+                            _mandis.isNotEmpty) ...[
+                          const Text(
+                            "Select Your Mandis:",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 16),
                           ),
-                          onChanged: (val) {
-                            setState(() {
-                              _selectedMandi = val;
-                              if (_selectedState != null && val != null) {
-                                final rawCrops =
-                                    _masterData[_selectedState]![val] as List;
-                                _availableCrops = List<String>.from(rawCrops)
-                                  ..sort();
-                              } else {
-                                _availableCrops = [];
-                              }
-                              _selectedCrops.clear();
-                            });
-                          },
-                          items: _mandis
-                              .map(
-                                (m) =>
-                                    DropdownMenuItem(value: m, child: Text(m)),
-                              )
-                              .toList(),
-                        ),
-                        const SizedBox(height: 24),
-                        if (_selectedMandi != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            "Select all mandis where you sell your crops",
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[600]),
+                          ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: _mandis.map((mandi) {
+                              final isSelected =
+                                  _selectedMandis.contains(mandi);
+                              return FilterChip(
+                                label: Text(mandi),
+                                selected: isSelected,
+                                selectedColor: const Color(0xFFC8E6C9),
+                                checkmarkColor: const Color(0xFF1B5E20),
+                                avatar: Icon(
+                                  Icons.store,
+                                  size: 16,
+                                  color: isSelected
+                                      ? const Color(0xFF1B5E20)
+                                      : Colors.grey,
+                                ),
+                                labelStyle: TextStyle(
+                                  color: isSelected
+                                      ? const Color(0xFF1B5E20)
+                                      : Colors.black87,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                onSelected: (selected) =>
+                                    _onMandiToggled(mandi, selected),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+
+                        // Crop Selection (only after mandis are selected)
+                        if (_selectedMandis.isNotEmpty &&
+                            _availableCrops.isNotEmpty) ...[
+                          const SizedBox(height: 24),
                           const Text(
                             "Select Your Crops:",
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                                fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                           const SizedBox(height: 10),
                           Wrap(
@@ -272,6 +347,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             }).toList(),
                           ),
                         ],
+
                         const SizedBox(height: 30),
                         SizedBox(
                           width: double.infinity,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/localization.dart';
 import 'register_screen.dart';
 import 'dashboard_screen.dart';
 
@@ -117,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -152,10 +153,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       );
                     },
-                    child: const Text(
-                      "Mandi Predict",
+                    child: Text(
+                      AppLocalizations.get(localeNotifier.value, 'app_title'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -179,10 +180,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     curve: Curves.easeOut,
                     builder: (context, value, child) =>
                         Opacity(opacity: value, child: child),
-                    child: const Text(
-                      "Farmer Login",
+                    child: Text(
+                      '${AppLocalizations.get(localeNotifier.value, 'farmer_role')} ${AppLocalizations.get(localeNotifier.value, 'login')}',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w500,
                         color: Color(
@@ -210,9 +211,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: Column(
                       children: [
-                        const Text(
-                          "Welcome Back!",
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.get(
+                              localeNotifier.value, 'welcome_back'),
+                          style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF424242),
@@ -221,10 +223,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 30),
                         TextField(
                           controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: "Name",
-                            prefixIcon: Icon(Icons.person_outline),
-                            hintText: "Enter your name",
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.get(
+                                localeNotifier.value, 'name'),
+                            prefixIcon: const Icon(Icons.person_outline),
+                            hintText: AppLocalizations.get(
+                                localeNotifier.value, 'enter_name'),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -232,9 +236,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _passController,
                           obscureText: !_isPasswordVisible,
                           decoration: InputDecoration(
-                            labelText: "Password",
+                            labelText: AppLocalizations.get(
+                                localeNotifier.value, 'password'),
                             prefixIcon: const Icon(Icons.lock_outline),
-                            hintText: "Enter your password",
+                            hintText: AppLocalizations.get(
+                                localeNotifier.value, 'enter_password'),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _isPasswordVisible
@@ -266,7 +272,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : const Text("LOGIN"),
+                                : Text(AppLocalizations.get(
+                                    localeNotifier.value, 'login')),
                           ),
                         ),
                       ],
@@ -300,9 +307,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       );
                     },
-                    child: const Text(
-                      "New Farmer? Register Here",
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.get(
+                          localeNotifier.value, 'new_farmer_register'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF2E7D32),
