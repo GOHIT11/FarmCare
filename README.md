@@ -1,6 +1,6 @@
 # 🌾 FarmCare - Smart Agricultural Price Forecasting
 
-**MandiPredict** is an AI-powered application designed to empower Indian farmers by providing accurate, real-time market price predictions for their crops. 
+**FarmCare** is an AI-powered application designed to empower Indian farmers by providing accurate, real-time market price predictions for their crops. 
 
 By combining historical data analysis with machine learning, MandiPredict helps farmers make informed decisions about **when** and **where** to sell their produce to maximize profits. It also features a Generative AI assistant to answer farming-related queries in local languages.
 
